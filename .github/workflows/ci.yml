@@ -43,15 +43,20 @@ jobs:
     container: debian:${{ matrix.release }}-slim
 
     steps:
-    - name: Install git
-      run: apt-get update && apt-get install -y git
+    - name: Install and configure git
+      run: |
+        apt-get update
+        apt-get install -y git
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        git config --global user.name "Your Name"
+        git config --global user.email "you@example.com"
 
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Full history to be able to determine version number
 
     - name: Merge into debian branch
-      run: git config --system --add safe.directory "$GITHUB_WORKSPACE" && git checkout debian && git merge --no-commit "$GITHUB_REF"
+      run: git checkout debian && git merge "$GITHUB_REF"
 
     - name: Build and install
       run: install-debian.sh
