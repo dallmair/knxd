@@ -32,32 +32,23 @@ jobs:
       run: make check
 
     - name: Test install
-      run: make install
+      run: sudo make install
 
-  crossbuild:
+  debian:
 
+    strategy:
+      matrix:
+        release: [stable, oldstable, testing]
     runs-on: ubuntu-latest
-    container: dockcross/linux-mips-uclibc
+    container: debian/${{ matrix.release }}
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Full history to be able to determine version number
 
-    - name: Install build dependencies
-      run: sudo apt-get install -y libusb-1.0-0-dev libsystemd-dev libev-dev libfmt-dev libinih-dev
+    - name: Merge into debian branch
+      run: git checkout debian && git merge ${{ github.ref }}
 
-    - name: Bootstrap
-      run: sh bootstrap.sh
-
-    - name: Configure
-      run: ./configure
-
-    - name: Build
-      run: make
-
-    - name: Run check
-      run: make check
-
-    - name: Test install
-      run: make install
+    - name: Build and install
+      run: sudo install-debian.sh
