@@ -60,3 +60,4 @@ jobs:
 
     - name: Build and install
       run: install-debian.sh
+      working-directory: $GITHUB_WORKSPACE
