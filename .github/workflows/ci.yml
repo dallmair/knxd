@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Bootstrap
+      run: sh bootstrap.sh
+
+    - name: Configure
+      run: ./configure
+
+    - name: Build
+      run: make
+
+    - name: Run check
+      run: make check
+
+    - name: Test install
+      run: make install
+
+  crossbuild:
+
+    runs-on: ubuntu-latest
+    container: dockcross/linux-mips-uclibc
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Bootstrap
+      run: sh bootstrap.sh
+
+    - name: Configure
+      run: ./configure
+
+    - name: Build
+      run: make
+
+    - name: Run check
+      run: make check
+
+    - name: Test install
+      run: make install
