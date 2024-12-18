@@ -47,8 +47,13 @@ jobs:
       with:
         fetch-depth: 0 # Full history to be able to determine version number
 
+    - name: Install git
+      run: apt-get update && apt-get install -y git
+
     - name: Merge into debian branch
-      run: apt-get update && apt-get install -y git && git checkout debian && git merge ${{ github.ref }}
+      run: git checkout debian && git merge ${{ github.ref }}
+      working-directory: ${{ github.workspace }}
 
     - name: Build and install
       run: install-debian.sh
+      working-directory: ${{ github.workspace }}
