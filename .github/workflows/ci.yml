@@ -40,7 +40,7 @@ jobs:
       matrix:
         release: [stable, oldstable, testing]
     runs-on: ubuntu-latest
-    container: debian/${{ matrix.release }}
+    container: debian:${{ matrix.release }}
 
     steps:
     - uses: actions/checkout@v4
