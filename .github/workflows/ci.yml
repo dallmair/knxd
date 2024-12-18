@@ -43,10 +43,13 @@ jobs:
     container: debian:${{ matrix.release }}-slim
 
     steps:
-    - name: Install and configure git
+    - name: Install dependencies
       run: |
         apt-get update
-        apt-get install -y git
+        apt-get install -y --no-install-recommends git sudo
+
+    - name: Configure git
+      run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git config --global user.name "Your Name"
         git config --global user.email "you@example.com"
