@@ -51,7 +51,7 @@ jobs:
         fetch-depth: 0 # Full history to be able to determine version number
 
     - name: Merge into debian branch
-      run: git checkout debian && git merge ${{ github.ref }}
+      run: git config --global --add safe.directory ${{ github.workspace }} && git checkout debian && git merge ${{ github.ref }}
 
     - name: Build and install
       run: install-debian.sh
