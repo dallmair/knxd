@@ -14,6 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install build dependencies
+      run: apt-get install -y m4
+
     - name: Bootstrap
       run: sh bootstrap.sh
 
