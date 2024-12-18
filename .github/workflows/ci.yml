@@ -49,15 +49,15 @@ jobs:
         apt-get upgrade -y
         apt-get install -y --no-install-recommends git sudo
 
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Full history to be able to determine version number
+
     - name: Configure git
       run: |
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git config --global user.name "Your Name"
         git config --global user.email "you@example.com"
-
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Full history to be able to determine version number
 
     - name: Merge into debian branch
       run: git checkout debian && git merge "$GITHUB_REF"
