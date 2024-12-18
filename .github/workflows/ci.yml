@@ -59,5 +59,4 @@ jobs:
       run: git checkout debian && git merge "$GITHUB_REF"
 
     - name: Build and install
-      run: install-debian.sh
-      working-directory: $GITHUB_WORKSPACE
+      run: sh install-debian.sh
