@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Full history to be able to determine version number
+
+    - name: Install build dependencies
+      run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev libsystemd-dev libev-dev libfmt-dev libinih-dev
+
+    - name: Bootstrap
+      run: sh bootstrap.sh
+
+    - name: Configure
+      run: ./configure
+
+    - name: Build
+      run: make
+
+    - name: Run check
+      run: make check
+
+    - name: Test install
+      run: sudo make install
+
+  debian:
+
+    strategy:
+      matrix:
+        release: [stable, oldstable, testing]
+    runs-on: ubuntu-latest
+    container: debian:${{ matrix.release }}-slim
+
+    steps:
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get upgrade -y
+        apt-get install -y --no-install-recommends ca-certificates git sudo
+
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Full history to be able to determine version number
+
+    - name: Configure git
+      run: |
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        git config --global user.name "Your Name"
+        git config --global user.email "you@example.com"
+
+    - name: Merge into debian branch
+      run: git checkout debian && git merge "$GITHUB_REF"
+
+    - name: Build and install
+      run: sh install-debian.sh
