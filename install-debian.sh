@@ -7,7 +7,9 @@ cd "$(dirname "$0")"
 
 : 0 make sure the system is clean
 
-if ! sudo apt-get autoremove --assume-no ; then
+# don't error out when we're doing integration testing
+B="$(git branch --show-current || echo "none")"
+if [ "$B" != "ci" ] && ! sudo apt-get autoremove --assume-no ; then
 	set +x
 	echo "DANGER: this script cleans up after itself, but you have packages"
 	echo "marked for auto-removal which we would remove from your system."
