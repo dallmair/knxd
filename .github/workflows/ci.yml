@@ -104,10 +104,11 @@ jobs:
       with:
         fetch-depth: 0 # Full history to be able to determine version number
 
-    - name: Merge with debian branch
+    - name: Merge into debian branch
       run: |
         git switch -C ci
-        git merge debian
+        git checkout debian
+        git merge ci
 
     - name: Build and install
       run: sh install-debian.sh
