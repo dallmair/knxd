@@ -7,6 +7,7 @@ knxd (0.14.72-1) unstable; urgency=medium
 knxd (0.14.71-1) unstable; urgency=medium
 
   * Merge
+  * Do not build examples. Closes: #1091852
 
  -- Matthias Urlichs <matthias@urlichs.de>  Tue, 17 Dec 2024 22:22:04 +0100
 
