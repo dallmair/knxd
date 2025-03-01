@@ -32,7 +32,7 @@ index bcbe340..951d7cf 100644
  *.swp
  *.la
 diff --git a/Makefile.am b/Makefile.am
-index e66b4b2..9ecf9da 100644
+index 76dee0f..b3e7bd9 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -2,6 +2,7 @@ AUTOMAKE_OPTIONS=1.9
@@ -52,10 +52,10 @@ index e66b4b2..9ecf9da 100644
  
  test: all
 diff --git a/README.md b/README.md
-index 930e190..b9f1749 100644
+index 5df1bf7..b596ff5 100644
 --- a/README.md
 +++ b/README.md
-@@ -4,13 +4,14 @@ knxd [![Build Status](https://travis-ci.org/knxd/knxd.svg)](https://travis-ci.or
+@@ -4,13 +4,14 @@ knxd [![CI](https://github.com/knxd/knxd/actions/workflows/ci.yml/badge.svg)](ht
  KNX is a very common building automation protocol which runs on dedicated 9600-baud wire as well as IP multicast.
  ``knxd`` is an advanced router/gateway which runs on any Linux computer; it can talk to all known KNX interfaces.
  
@@ -119,7 +119,7 @@ index 930e190..b9f1749 100644
 -    sh bootstrap.sh
 -    ./configure --help
 -    ./configure --your-chosen-options
--    make
+-    make -j$(nproc)
 -    make install
 -    cd ..
 +    git pull
@@ -197,31 +197,33 @@ index 930e190..b9f1749 100644
  
  ### Adding a TPUART USB interface (serial, USB)
  
-diff --git a/bootstrap.sh b/bootstrap.sh
-index fd3eca7..365058a 100644
---- a/bootstrap.sh
-+++ b/bootstrap.sh
-@@ -13,7 +13,7 @@ esac
- 
- # on Debian systems we need pkg-config
- if which dpkg >/dev/null && ! which pkg-config >/dev/null ; then
--	echo "Package 'pkg-config' missing."
-+	echo "Tool 'pkg-config' missing. Install package 'pkgconf' or older 'pkg-config'."
- 	exit 2
- fi
- 
 diff --git a/install-debian.sh b/install-debian.sh
-new file mode 100644
-index 0000000..e1432de
+new file mode 100755
+index 0000000..4ac04ef
 --- /dev/null
 +++ b/install-debian.sh
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,39 @@
 +#!/bin/sh
 +
 +set -ex
 +export LC_ALL=C.UTF-8
 +
 +cd "$(dirname "$0")"
++
++: 0 make sure the system is clean
++
++# don't error out when we're doing integration testing
++B="$(git branch --show-current || echo "none")"
++if [ "$B" != "ci" ] && ! sudo apt-get autoremove --assume-no ; then
++	set +x
++	echo "DANGER: this script cleans up after itself, but you have packages"
++	echo "marked for auto-removal which we would remove from your system."
++	echo ""
++	echo -n "Enter 'y' to proceed: "
++	read y
++	test y = "$y" || exit 1
++	set -x
++fi
 +
 +: 1 install tools, minimal variant
 +sudo apt-get install --no-install-recommends build-essential devscripts equivs --yes
@@ -239,5 +241,4 @@ index 0000000..e1432de
 +sudo dpkg -i knxd_*.deb knxd-tools_*.deb
 +
 +: 5 Clean up. Optional. Remove this if you want to rebuild soon-ish.
-+sudo apt remove --autoremove knxd-build-deps --yes
-+
++sudo apt-get remove --autoremove knxd-build-deps --yes
