@@ -92,6 +92,7 @@ jobs:
       run: |
         apt-get update
         apt-get dist-upgrade -y
+        apt-get autoremove -y --purge
         apt-get install -y --no-install-recommends ca-certificates git sudo
 
     - name: Configure git in container
@@ -106,8 +107,8 @@ jobs:
 
     - name: Merge with debian branch
       run: |
-        git switch -C ci
-        git merge debian
+        git switch -C ci origin/debian
+        git merge origin/main
 
     - name: Build and install
       run: sh install-debian.sh

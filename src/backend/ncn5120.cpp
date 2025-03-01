@@ -34,7 +34,7 @@ protected:
   void setstate(enum TSTATE state);
 
   void RecvLPDU (const uint8_t * data, int len);
-  virtual FDdriver * create_serial(LowLevelIface* parent, IniSectionPtr& s);
+  virtual LLserial * create_serial(LowLevelIface* parent, IniSectionPtr& s);
 };
 
 class NCN5120serial : public LLserial
@@ -54,7 +54,7 @@ protected:
   void termios_settings(struct termios &t1)
   {
     t1.c_cflag = CS8 | CLOCAL | CREAD;
-    t1.c_iflag = IGNBRK | INPCK | ISIG;
+    t1.c_iflag = IGNBRK | ISIG;
     t1.c_oflag = 0;
     t1.c_lflag = 0;
     t1.c_cc[VTIME] = 1;
@@ -69,11 +69,10 @@ NCN5120::create_wrapper(LowLevelIface* parent, IniSectionPtr& s, LowLevelDriver*
 }
 
 
-FDdriver *
+LLserial *
 NCN5120wrap::create_serial(LowLevelIface* parent, IniSectionPtr& s)
 {
-  fd_driver = new NCN5120serial(parent,s);
-  return fd_driver;
+  return new NCN5120serial(parent, s);
 }
 
 void NCN5120wrap::RecvLPDU (const uint8_t * data, int len)
@@ -94,4 +93,3 @@ NCN5120wrap::setstate(enum TSTATE new_state)
     }
   TPUARTwrap::setstate(new_state);
 }
-

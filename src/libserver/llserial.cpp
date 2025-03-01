@@ -149,3 +149,26 @@ LLserial::stop(bool err)
   FDdriver::stop(err);
 }
 
+int
+LLserial::enable_input_parity_check()
+{
+  struct termios t1;
+
+  TRACEPRINTF (t, 8, "Enabling input parity check on fd %d\n", fd);
+
+  if (tcgetattr (fd, &t1))
+  {
+    ERRORPRINTF (t, E_ERROR | 70, "tcgetattr failed: %s", strerror(errno));
+    return -1;
+  }
+
+  t1.c_iflag = t1.c_iflag | INPCK;
+
+  if (tcsetattr (fd, TCSANOW, &t1))
+  {
+    ERRORPRINTF (t, E_ERROR | 70, "tcsetattr failed: %s", strerror(errno));
+    return -2;
+  }
+
+  return 0;
+}

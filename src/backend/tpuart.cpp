@@ -64,11 +64,10 @@ TPUART::create_wrapper(LowLevelIface* parent, IniSectionPtr& s, LowLevelDriver* 
   return new TPUARTwrap(parent,s, i);
 }
 
-FDdriver *
+LLserial *
 TPUARTwrap::create_serial(LowLevelIface* parent, IniSectionPtr& s)
 {
-  fd_driver = new TPUARTserial(parent,s);
-  return fd_driver;
+  return new TPUARTserial(parent, s);
 }
 
 
@@ -136,7 +135,8 @@ TPUARTwrap::setup()
           ERRORPRINTF (t, E_ERROR | 25, "Don't specify both device and IP options!");
           return false;
         }
-      iface = create_serial(this, cfg);
+      ll_serial = create_serial(this, cfg);
+      iface = ll_serial;
     }
   else
     {
@@ -363,35 +363,16 @@ TPUARTwrap::timer_cb(ev::timer &, int)
 }
 
 int
-TPUARTwrap::enableInputParityCheck()
+TPUARTwrap::enable_input_parity_check()
 {
-  struct termios t1;
-
-  if (fd_driver == nullptr)
+  if (ll_serial == nullptr)
   {
     // Not possible and not necessary to enable on TCP connections, so just continue.
     return 0;
   }
 
-  TRACEPRINTF (t, 8, "Enabling input parity check on fd %d\n", fd_driver->get_fd());
-
-  if (tcgetattr (fd_driver->get_fd(), &t1))
-  {
-    ERRORPRINTF (t, E_ERROR | 70, "tcgetattr failed: %s", strerror(errno));
-    return -1;
-  }
-
-  t1.c_iflag = t1.c_iflag | INPCK;
-
-  if (tcsetattr (fd_driver->get_fd(), TCSANOW, &t1))
-  {
-    ERRORPRINTF (t, E_ERROR | 70, "tcsetattr failed: %s", strerror(errno));
-    return -2;
-  }
-
-  return 0;
+  return ll_serial->enable_input_parity_check();
 }
-
 
 void
 TPUARTwrap::in_check()
@@ -479,7 +460,7 @@ TPUARTwrap::recv_Data(CArray &c)
           if (state == T_in_reset)
             {
               TRACEPRINTF (t, 8, "RESET_ACK");
-              if (enableInputParityCheck()>=0)
+              if (enable_input_parity_check() >= 0)
                 setstate(T_in_setaddr);
               // else time out
             }

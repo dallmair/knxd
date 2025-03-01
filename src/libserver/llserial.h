@@ -47,6 +47,7 @@ public:
   bool setup();
   void start();
   void stop(bool err);
+  int enable_input_parity_check();
 
 private:
   low_latency_save sold;

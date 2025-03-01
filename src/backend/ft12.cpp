@@ -44,7 +44,7 @@ protected:
   void termios_settings (struct termios &t1)
   {
     t1.c_cflag = CS8 | CLOCAL | CREAD | PARENB;
-    t1.c_iflag = IGNBRK | INPCK | ISIG;
+    t1.c_iflag = IGNBRK | ISIG;
     t1.c_oflag = 0;
     t1.c_lflag = 0;
     t1.c_cc[VTIME] = 1;
@@ -120,7 +120,8 @@ FT12wrap::setup()
           ERRORPRINTF (t, E_ERROR | 5, "Don't specify both device and IP options!");
           return false;
         }
-      iface = new FT12serial(this, cfg);
+      ll_serial = new FT12serial(this, cfg);
+      iface = ll_serial;
     }
   else
     {
@@ -325,6 +326,10 @@ FT12wrap::process_read(bool is_timeout)
                   const uint8_t reset[1] = { 0xA0 };
                   CArray c = CArray (reset, sizeof (reset));
                   t->TracePacket (0, "RecvReset", c);
+                  if (ll_serial != nullptr)
+                    {
+                      ll_serial->enable_input_parity_check();
+                    }
                   LowLevelFilter::recv_Data (c);
                 }
               akt.deletepart (0, 4);
@@ -444,5 +449,3 @@ FT12CEMIDriver::cmdOpen()
   const uint8_t t1[] = { 0xF6, 0x00, 0x08, 0x01, 0x34, 0x10, 0x01, 0x00 };
   send_Local (CArray (t1, sizeof (t1)),1);
 }
-
-

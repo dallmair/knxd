@@ -25,6 +25,7 @@ EMI2Driver::EMI2Driver (LowLevelIface* c, IniSectionPtr& s, LowLevelDriver *i) :
 {
   t->setAuxName("EMI2");
   sendLocal_done.set<EMI2Driver,&EMI2Driver::sendLocal_done_cb>(this);
+  reset_timer.set<EMI2Driver,&EMI2Driver::reset_timer_cb>(this);
 }
 
 void

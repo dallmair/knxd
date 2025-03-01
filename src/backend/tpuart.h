@@ -24,6 +24,7 @@
 #include "link.h"
 #include "lpdu.h"
 #include "lowlevel.h"
+#include "llserial.h"
 
 // also update SN() in tpuart.cpp
 enum TSTATE
@@ -107,11 +108,11 @@ public:
   void send_L_Data (LDataPtr l);
 
 protected:
-  virtual FDdriver * create_serial(LowLevelIface* parent, IniSectionPtr& s);
-  FDdriver *fd_driver = NULL;
+  virtual LLserial * create_serial(LowLevelIface* parent, IniSectionPtr& s);
 
 private:
-  int enableInputParityCheck();
+  LLserial *ll_serial = nullptr;
+  int enable_input_parity_check();
 };
 
 #endif

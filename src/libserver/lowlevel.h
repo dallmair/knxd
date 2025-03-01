@@ -281,7 +281,6 @@ public:
   bool setup();
   void start();
   void stop(bool err);
-  int get_fd();
 
 protected:
   /** device connection */

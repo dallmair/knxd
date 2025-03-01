@@ -24,6 +24,7 @@
 
 #include "iobuf.h"
 #include "lowlevel.h"
+#include "llserial.h"
 #include "emi_common.h"
 #include "lowlatency.h"
 #include "link.h"
@@ -125,6 +126,9 @@ public:
   void do_send_Local (CArray& l, int raw = 0);
 
   void sendReset();
+
+private:
+  LLserial *ll_serial = nullptr;
 };
 
 #endif

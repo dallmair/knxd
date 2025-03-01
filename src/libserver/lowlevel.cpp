@@ -232,8 +232,3 @@ HWBusDriver::setup()
     return false;
   return true;
 }
-
-int FDdriver::get_fd()
-{
-  return fd;
-}
