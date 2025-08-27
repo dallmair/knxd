@@ -405,8 +405,8 @@ CArray A_GroupValue_Write_PDU::ToPacket () const
 
   CArray pdu;
   pdu.resize (2);
-  pdu[0] = A_GroupValue_Response >> 8;
-  pdu[1] = A_GroupValue_Response & 0xc0;
+  pdu[0] = A_GroupValue_Write >> 8;
+  pdu[1] = A_GroupValue_Write & 0xc0;
   if (issmall)
     {
       pdu[1] |= data[0] & 0x3F;
