@@ -1,3 +1,10 @@
+knxd (0.14.74-1) unstable; urgency=medium
+
+  * Merge.
+  * Fix wrong APDU value.
+
+ -- Matthias Urlichs <matthias@urlichs.de>  Wed, 27 Aug 2025 10:14:02 +0200
+
 knxd (0.14.73-1) unstable; urgency=medium
 
   * Merge: 
