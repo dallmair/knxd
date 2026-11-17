@@ -1,0 +1,27 @@
+[project]
+name = "knxd-tests"
+version = "0"
+dependencies = [
+    "pytest>=8",
+    "anyio>=4",
+    # Lint and type checks for test/.
+    "ruff",
+    "ty",
+]
+
+[tool.pytest.ini_options]
+anyio_mode = "auto"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = [
+    "I", "E", "W", "UP", "B", "SIM", "C4", "PIE", "RET", "RUF", "PTH", "PERF", "FURB", "ANN", "PT", "ASYNC", "PL", "TC",
+]
+# Literal values in test assertions are intentional
+ignore = ["PLR2004"]
+
+[tool.ruff.lint.isort]
+# Sibling modules imported via pytest's rootdir-relative sys.path insertion
+known-first-party = ["knxnet_transport", "knxnet_wire", "server_config", "tunnel_session"]

@@ -6,7 +6,7 @@ EXTRA_DIST=SubmittingPatches .gitignore tools/version.sh
 
 BUILDDIRS = 
 
-SUBDIRS=. src systemd
+SUBDIRS=. src systemd test
 DIST_SUBDIRS    = $(SUBDIRS)
 
 BUILT_SOURCES=path.h version.h
@@ -38,3 +38,4 @@ config.h: configure
 test: all
 	sh tools/test.sh
 	-python3 tools/tpuart_test.py
+	$(MAKE) $(AM_MAKEFLAGS) -C test check

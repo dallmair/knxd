@@ -205,6 +205,10 @@ This part covers "manual" installation.
 
     # first, install build tools and dependencies. You need git, autotools, and gcc/g++.
     #: check your Linux distribution's documentation if you don't know how
+    # The test suite (make test) also needs Python 3 and the pytest module.
+    # Use a venv (see test/README.md): python3 -m venv .venv && . .venv/bin/activate
+    # && pip install 'test/[xdist]',
+    # then run configure from that shell.
     # You also need a "knxd" user.
 
     # get the source code

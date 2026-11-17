@@ -341,6 +341,19 @@ AC_CHECK_MEMBER([struct sockaddr_in.sin_len],[AC_DEFINE(HAVE_SOCKADDR_IN_LEN,1,[
 #include <netinet/in.h>
 ])
 
+dnl integration tests (test/) need Python 3 with pytest
+AM_PATH_PYTHON([3],, [:])
+have_pytest=no
+if test "$PYTHON" != ":"; then
+ AC_CACHE_CHECK([for python pytest module], [knxd_cv_py_pytest],
+  [if $PYTHON -c 'import pytest' >/dev/null 2>&1; then knxd_cv_py_pytest=yes; else knxd_cv_py_pytest=no; fi])
+ have_pytest=$knxd_cv_py_pytest
+fi
+if test "$have_pytest" != yes; then
+ AC_MSG_WARN([python3 with the pytest module not found; 'make test' will not run the integration tests. Activate a venv with test/pyproject.toml dependencies installed, or set PYTHON=/path/to/python3 (see test/README.md)])
+fi
+AM_CONDITIONAL(HAVE_INTEGRATION_TESTS, test x$have_pytest = xyes)
+
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
 Makefile 
@@ -368,6 +381,7 @@ src/client/perl/Makefile
 src/client/php/Makefile
 src/client/python/Makefile
 src/client/ruby/Makefile
+test/Makefile
 ])
 dnl src/examples/Makefile
 dnl src/tools/eibnet/Makefile
