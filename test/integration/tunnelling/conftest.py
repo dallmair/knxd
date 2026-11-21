@@ -35,15 +35,12 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 @pytest.fixture
-def start_server(
-    procs: Processes, tmp_path: Path, tool: Callable[[str], str], free_ports: Callable[[int], list[int]]
-) -> StartServer:
+def start_server(procs: Processes, tmp_path: Path, tool: Callable[[str], str]) -> StartServer:
     """Return a function that starts a knxd and waits until all its servers answer."""
 
     async def start(
         *, heartbeat: int = 120, discover: bool = True, tunnel: bool = True, addresses: int = CLIENT_ADDRESSES
     ) -> Server:
-        udp_port, tcp_port = free_ports(2)
         unix_path = str(tmp_path / "tun.sock")
         opt = ["tunnel = tunnel"] if tunnel else []
         lines = [
@@ -52,6 +49,10 @@ def start_server(
             "addr = 1.1.1",
             f"client-addrs = 1.1.200:{addresses}",
             "connections = server,tcp,dummy,unix",
+            "debug = debug",
+            "",
+            "[debug]",
+            "error-level = info",
             "",
             "[dummy]",
             "driver = dummy",
@@ -59,14 +60,14 @@ def start_server(
             "[server]",
             "server = ets_router",
             f"discover = {'true' if discover else 'false'}",
-            f"port = {udp_port}",
+            "port = 0",
             "multicast-address = 224.99.98.95",
             f"heartbeat-timeout = {heartbeat}",
             *opt,
             "",
             "[tcp]",
             "server = tcptunsrv",
-            f"port = {tcp_port}",
+            "port = 0",
             f"heartbeat-timeout = {heartbeat}",
             *opt,
             "",
@@ -83,7 +84,8 @@ def start_server(
         await procs.spawn("knxd", [tool("knxd"), str(config)])
         # The unix server is started last, so its socket shows that the others are up too.
         await procs.wait_for_socket(tmp_path / "tun.sock")
-        return Server(udp_port, tcp_port, unix_path, discover)
+        ports = await procs.wait_for_ports("knxd", ["server", "tcp"])
+        return Server(ports["server"], ports["tcp"], unix_path, discover)
 
     return start
 

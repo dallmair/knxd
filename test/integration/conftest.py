@@ -10,9 +10,8 @@ test/pyproject.toml). Never block the event loop in a test.
 from __future__ import annotations
 
 import os
-import random
+import re
 import shutil
-import socket
 import subprocess
 import sys
 from pathlib import Path
@@ -26,11 +25,11 @@ if TYPE_CHECKING:
 
     from anyio.abc import Process
 
-LOOPBACK = "127.0.0.1"
 DEFAULT_TIMEOUT = 10.0
 STOP_GRACE = 5.0
 POLL_INTERVAL = 0.05
-PORT_BASE = 10000
+# knxd logs this at error level 6 (info) once a listener with port = 0 got its port from the kernel.
+LISTEN_LINE = re.compile(rb"Server '(\S+)' is listening for [^\n]+? on (?:UDP|TCP) port (\d+)\n")
 # SO_ACCEPTCON bit in the Flags column of /proc/net/unix (Linux).
 SO_ACCEPTCON = 0x10000
 
@@ -69,44 +68,10 @@ def tool(knxd_env: dict[str, str]) -> Callable[[str], str]:
     return find
 
 
-@pytest.fixture
-def free_ports() -> Callable[[int], list[int]]:
-    return allocate_ports
-
-
-def _ephemeral_low() -> int:
-    try:
-        return int(Path("/proc/sys/net/ipv4/ip_local_port_range").read_text().split()[0])
-    except (OSError, ValueError, IndexError):
-        return 32768
-
-
-def allocate_ports(count: int) -> list[int]:
-    """Return distinct ports that are currently free for both UDP and TCP.
-
-    Ports come from below the ephemeral range: any client socket may take an
-    ephemeral port between this check and knxd's bind().
-    """
-    high = _ephemeral_low()
-    ports: list[int] = []
-    while len(ports) < count:
-        port = random.randrange(PORT_BASE, high)
-        if port not in ports and _port_is_free(port):
-            ports.append(port)
-    return ports
-
-
-def _port_is_free(port: int) -> bool:
-    with (
-        socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp,
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp,
-    ):
-        try:
-            udp.bind((LOOPBACK, port))
-            tcp.bind((LOOPBACK, port))
-        except OSError:
-            return False
-    return True
+def _bound_ports(path: Path) -> dict[str, int]:
+    if not path.exists():
+        return {}
+    return {m[1].decode(): int(m[2]) for m in LISTEN_LINE.finditer(path.read_bytes())}
 
 
 def _count_lines(path: Path) -> int:
@@ -227,6 +192,14 @@ class Processes:
 
     async def wait_for_socket(self, path: Path) -> None:
         await _wait_until(lambda: _listening(path), f"{path.name} to listen")
+
+    async def wait_for_ports(self, name: str, sections: Sequence[str]) -> dict[str, int]:
+        """Return the ports that process `name` bound for the given config sections, by section name."""
+        err = self._paths(name)[1]
+        await _wait_until(
+            lambda: set(sections) <= _bound_ports(err).keys(), f"{name} to report ports of {', '.join(sections)}"
+        )
+        return _bound_ports(err)
 
     def report_output(self) -> None:
         for name in self._names:

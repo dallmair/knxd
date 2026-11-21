@@ -521,7 +521,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
       if (b)
         {
           *b++ = 0;
-          if (atoi (b) > 0)
+          if (atoi (b) > 0 || !strcmp (b, "0"))
             (*ini["server"])["port"] = b;
         }
       if (*a)

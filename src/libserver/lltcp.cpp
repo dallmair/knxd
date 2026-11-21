@@ -54,7 +54,7 @@ LLtcp::setup()
 void
 LLtcp::start()
 {
-  int reuse = 1;
+  int reuse = port != 0;
   int nodelay = 1;
   struct sockaddr_in addr;
 

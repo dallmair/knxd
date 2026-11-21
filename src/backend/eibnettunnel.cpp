@@ -101,7 +101,7 @@ EIBNetIPTunnel::start()
     goto ex;
   raddr.sin_port = htons (sport);
   NAT = false;
-  sock = new EIBNetIPSocket (raddr, (sport != 0), t);
+  sock = new EIBNetIPSocket (raddr, t);
   if (!sock->init ())
     goto ex;
   raddr.sin_port = sock->port();

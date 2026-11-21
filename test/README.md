@@ -15,7 +15,7 @@ Run only those tests with `-m deviation`, or leave them out with
 | Path | Contents |
 |------|----------|
 | `run_integration.py` | Entry point that `make test` runs. It starts pytest on `integration/`. |
-| `integration/conftest.py` | Shared fixtures: build-tree lookup, process lifecycle, port allocation, readiness checks. |
+| `integration/conftest.py` | Shared fixtures: build-tree lookup, process lifecycle, readiness checks, ports that knxd bound for `port = 0`. |
 | `integration/tunnelling/` | KNXnet/IP tunnelling and management connections over UDP, TCP and Unix sockets, driven by a small Python KNXnet/IP client. |
 
 ## Coverage

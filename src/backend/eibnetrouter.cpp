@@ -43,7 +43,7 @@ EIBNetIPRouter::start()
   baddr.sin_family = AF_INET;
   baddr.sin_port = htons (port);
   baddr.sin_addr.s_addr = htonl (INADDR_ANY);
-  sock = new EIBNetIPSocket (baddr, 1, t);
+  sock = new EIBNetIPSocket (baddr, t);
   if (!sock->init ())
     goto err_out;
   sock->on_recv.set<EIBNetIPRouter,&EIBNetIPRouter::read_cb>(this);

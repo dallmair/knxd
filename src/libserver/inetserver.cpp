@@ -47,7 +47,7 @@ void
 InetServer::start()
 {
   struct sockaddr_in addr;
-  int reuse = 1;
+  int reuse = port != 0;
 
   if (ignore_when_systemd && static_cast<Router &>(router).using_systemd)
     {
@@ -82,6 +82,13 @@ InetServer::start()
       ERRORPRINTF (t, E_ERROR | 14, "OpenInetSocket %d: listen: %s", port, strerror(errno));
       goto ex2;
     }
+
+  {
+    struct sockaddr_in bound;
+    socklen_t len = sizeof (bound);
+    if (getsockname (fd, (struct sockaddr *) &bound, &len) == 0)
+      ERRORPRINTF (t, E_INFO | 158, "Server '%s' is listening for knxd clients on TCP port %d", cfg->name, ntohs (bound.sin_port));
+  }
 
   TRACEPRINTF (t, 8, "InetSocket opened");
   NetServer::start();

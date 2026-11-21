@@ -465,7 +465,7 @@ public:
   InfoCallback on_error;
   InfoCallback on_next;
 
-  EIBNetIPSocket (struct sockaddr_in bindaddr, bool reuseaddr, TracePtr tr,
+  EIBNetIPSocket (struct sockaddr_in bindaddr, TracePtr tr,
                   SockMode mode = S_RDWR);
   virtual ~EIBNetIPSocket ();
   bool init ();

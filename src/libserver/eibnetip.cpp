@@ -68,8 +68,8 @@ const
   return c;
 }
 
-EIBNetIPSocket::EIBNetIPSocket (struct sockaddr_in bindaddr, bool reuseaddr,
-                                TracePtr tr, SockMode mode)
+EIBNetIPSocket::EIBNetIPSocket (struct sockaddr_in bindaddr, TracePtr tr,
+                                SockMode mode)
 {
   int i;
   t = tr;
@@ -92,7 +92,8 @@ EIBNetIPSocket::EIBNetIPSocket (struct sockaddr_in bindaddr, bool reuseaddr,
     return;
   set_non_blocking(fd);
 
-  if (reuseaddr)
+  // With SO_REUSEADDR, Linux may hand out an ephemeral UDP port that another reusing socket already has.
+  if (bindaddr.sin_port != 0)
     {
       i = 1;
       if (setsockopt (fd, SOL_SOCKET, SO_REUSEADDR, &i, sizeof (i)) == -1)

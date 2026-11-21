@@ -80,7 +80,7 @@ EIBnetDriver::EIBnetDriver (LinkConnectClientPtr c,
       baddr.sin_addr.s_addr = htonl (INADDR_ANY);
       baddr.sin_port = htons (port);
 
-      sock = new EIBNetIPSocket (baddr, 1, t);
+      sock = new EIBNetIPSocket (baddr, t);
       if (!sock->SetInterface(intf))
         goto err_out;
       if (!sock->init ())
@@ -205,7 +205,7 @@ EIBnetServer::start()
   baddr.sin_addr.s_addr = htonl (INADDR_ANY);
   baddr.sin_port = single_port ? htons(port) : 0;
 
-  sock = new EIBNetIPSocket (baddr, 1, t);
+  sock = new EIBNetIPSocket (baddr, t);
   if (!sock)
     {
       ERRORPRINTF (t, E_ERROR | 41, "EIBNetIPSocket creation failed");
@@ -221,6 +221,7 @@ EIBnetServer::start()
 
   sock->recvall = 1;
   Port = sock->port ();
+  ERRORPRINTF (t, E_INFO | 156, "Server '%s' is listening for KNXnet/IP on UDP port %d", cfg->name, ntohs (Port));
 
   mcast_conn = LinkConnectClientPtr(new LinkConnectClient(std::dynamic_pointer_cast<EIBnetServer>(shared_from_this()), router_cfg, t));
   mcast = EIBnetDriverPtr(new EIBnetDriver (mcast_conn, multicastaddr, single_port ? 0 : port, interface));

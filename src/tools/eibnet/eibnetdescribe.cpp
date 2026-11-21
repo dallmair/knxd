@@ -126,7 +126,7 @@ main (int ac, char *ag[])
   if (!GetSourceAddress (TracePtr(new Trace(t,a)), &caddr, &saddr))
     die ("No route found");
   saddr.sin_port = htons (sport);
-  sock = new EIBNetIPSocket (saddr, 0, TracePtr(new Trace(t,a)));
+  sock = new EIBNetIPSocket (saddr, TracePtr(new Trace(t,a)));
   sock->sendaddr = caddr;
   sock->recvaddr = caddr;
 
