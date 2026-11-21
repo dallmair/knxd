@@ -9,6 +9,10 @@ dependencies = [
     "ty",
 ]
 
+[project.optional-dependencies]
+# run_integration.py runs the suite in parallel when xdist is installed.
+xdist = ["pytest-xdist"]
+
 [tool.pytest.ini_options]
 anyio_mode = "auto"
 

@@ -41,7 +41,7 @@ jobs:
       run: make -j$(nproc)
 
     - name: Test
-      run: make -j1 test
+      run: make test
 
     - name: Install
       run: sudo make -j1 install
@@ -83,7 +83,7 @@ jobs:
       run: make -j$(nproc)
 
     - name: Test
-      run: make -j1 test
+      run: make test
 
     - name: Install
       run: make -j1 install

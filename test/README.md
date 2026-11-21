@@ -104,7 +104,9 @@ Alpine ships it with `python3`):
 
     python3 -m venv .venv
     . .venv/bin/activate
-    pip install test
+    pip install 'test/[xdist]'
+
+The `xdist` extra (pytest-xdist) is optional; omit it to run tests serially.
 
 Activate the venv before running `./configure`, because `configure` picks the
 first `python3` on `PATH`. To use a specific interpreter without activating,
@@ -128,8 +130,14 @@ run from the source tree, so the tests find the built `knxd` and `knxtool`:
 
     KNXD_BUILD_ROOT=$PWD python3 -m pytest test/integration/tunnelling
 
-Use `-k` to select one test, or `-n` with pytest-xdist to run in parallel.
-Parallel runs are not part of the default suite.
+Use `-k` to select one test, or `-n auto` (pytest-xdist) to run in parallel.
+When pytest-xdist is installed, `make test` runs the suite in parallel too.
+Knxd listeners use `port = 0`, so parallel tests never share a port.
+
+Tests marked `@pytest.mark.multicast` use fixed multicast groups and ports, so
+they are skipped in parallel runs. `make test` runs them in a second, serial
+pass. By hand, run them with `-m multicast` and without `-n`. They will run in
+parallel once each test gets its own network namespace.
 
 A test is reported as skipped when the build lacks a feature it needs, such as
 the group cache.

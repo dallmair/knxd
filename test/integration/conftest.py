@@ -34,6 +34,22 @@ LISTEN_LINE = re.compile(rb"Server '(\S+)' is listening for [^\n]+? on (?:UDP|TC
 SO_ACCEPTCON = 0x10000
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "multicast: uses fixed multicast groups or ports; cannot run in parallel until tests get their own netns",
+    )
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    if int(os.environ.get("PYTEST_XDIST_WORKER_COUNT", "1")) <= 1:
+        return
+    skip = pytest.mark.skip(reason="multicast tests cannot run in parallel yet; run them without -n")
+    for item in items:
+        if item.get_closest_marker("multicast"):
+            item.add_marker(skip)
+
+
 @pytest.fixture(scope="session")
 def anyio_backend() -> str:
     return "asyncio"
