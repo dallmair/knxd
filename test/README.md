@@ -136,8 +136,33 @@ Knxd listeners use `port = 0`, so parallel tests never share a port.
 
 Tests marked `@pytest.mark.multicast` use fixed multicast groups and ports, so
 they are skipped in parallel runs. `make test` runs them in a second, serial
-pass. By hand, run them with `-m multicast` and without `-n`. They will run in
-parallel once each test gets its own network namespace.
+pass inside a network namespace, so they cannot send telegrams onto a real KNX/IP
+network. They will run in parallel once each test gets its own namespace.
+
+### Multicast tests
+
+`KNXD_MULTICAST` selects where that pass runs. Set it for `make test`, or for
+`python3 test/run_integration.py`:
+
+    make test KNXD_MULTICAST=sudo
+
+| Value | Behaviour |
+|-------|-----------|
+| `auto` (default) | Uses an unprivileged namespace (`unshare --user --map-root-user --net`). If that is not possible, the multicast tests are skipped and the reason says so. |
+| `netns` | As `auto`, but fails instead of skipping. For CI that must support namespaces. |
+| `sudo` | Creates the namespace with `sudo unshare --net`, sets up `lo`, then drops back to your user for pytest. Only the setup runs as root, and the namespace vanishes with the process. Run `sudo -v` first if the prompt is hidden by `make`. |
+| `host` | No isolation, and never chosen automatically. For machines with no KNX/IP router on the network, for example CI. |
+
+Unprivileged namespaces are blocked by AppArmor on Ubuntu 24.04+
+(`kernel.apparmor_restrict_unprivileged_userns`), by `kernel.unprivileged_userns_clone=0`
+on older Debian, by `user.max_user_namespaces=0` on RHEL, and by Docker's default
+seccomp profile. Use `sudo` or `host` there. `sudo` needs `unshare`, `setpriv` and `ip`.
+
+`test/netns-run.sh MODE COMMAND...` implements these modes and can be used by hand,
+for example `test/netns-run.sh sudo python3 -m pytest -m multicast -k group`.
+
+Running `pytest -m multicast` directly skips these tests. Only the launcher or
+`KNXD_MULTICAST=host` enables them.
 
 A test is reported as skipped when the build lacks a feature it needs, such as
 the group cache.

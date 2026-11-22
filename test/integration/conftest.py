@@ -41,13 +41,30 @@ def pytest_configure(config: pytest.Config) -> None:
     )
 
 
+def pytest_report_header(config: pytest.Config) -> str | None:
+    if os.environ.get("KNXD_MULTICAST") == "host":
+        return "WARNING: KNXD_MULTICAST=host, multicast tests use the host network and may reach the LAN"
+    return None
+
+
+def _multicast_isolated() -> bool:
+    return os.environ.get("KNXD_NETNS_ACTIVE") == "1" or os.environ.get("KNXD_MULTICAST") == "host"
+
+
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    if int(os.environ.get("PYTEST_XDIST_WORKER_COUNT", "1")) <= 1:
-        return
-    skip = pytest.mark.skip(reason="multicast tests cannot run in parallel yet; run them without -n")
+    parallel = int(os.environ.get("PYTEST_XDIST_WORKER_COUNT", "1")) > 1
+    no_netns = pytest.mark.skip(
+        reason="multicast tests need a network namespace: run via run_integration.py with "
+        "KNXD_MULTICAST=netns or sudo, or KNXD_MULTICAST=host to use the host network",
+    )
+    no_parallel = pytest.mark.skip(reason="multicast tests cannot run in parallel yet; run them without -n")
     for item in items:
-        if item.get_closest_marker("multicast"):
-            item.add_marker(skip)
+        if not item.get_closest_marker("multicast"):
+            continue
+        if parallel:
+            item.add_marker(no_parallel)
+        elif not _multicast_isolated():
+            item.add_marker(no_netns)
 
 
 @pytest.fixture(scope="session")

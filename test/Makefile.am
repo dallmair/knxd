@@ -22,5 +22,6 @@ EXTRA_DIST = \
 	README.md \
 	pyproject.toml \
 	run_integration.py \
+	netns-run.sh \
 	coverage.sh \
 	integration
