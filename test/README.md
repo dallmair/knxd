@@ -135,9 +135,12 @@ When pytest-xdist is installed, `make test` runs the suite in parallel too.
 Knxd listeners use `port = 0`, so parallel tests never share a port.
 
 Tests marked `@pytest.mark.multicast` use fixed multicast groups and ports, so
-they are skipped in parallel runs. `make test` runs them in a second, serial
-pass inside a network namespace, so they cannot send telegrams onto a real KNX/IP
-network. They will run in parallel once each test gets its own namespace.
+they are skipped in plain `-n` runs. `make test` runs them in a separate pass
+after the other tests, so the output of the two passes does not interleave.
+In that pass every xdist worker has its own network namespace, so the multicast
+tests run in parallel with each other and cannot send telegrams onto a real
+KNX/IP network. With `KNXD_MULTICAST=host`, or without pytest-xdist, they run
+one at a time.
 
 ### Multicast tests
 

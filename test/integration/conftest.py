@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Callable, Generator, Sequence
 
     from anyio.abc import Process
+    from xdist.workermanage import WorkerController
 
 DEFAULT_TIMEOUT = 10.0
 STOP_GRACE = 5.0
@@ -37,8 +38,17 @@ SO_ACCEPTCON = 0x10000
 def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",
-        "multicast: uses fixed multicast groups or ports; cannot run in parallel until tests get their own netns",
+        "multicast: uses fixed multicast groups or ports; runs in parallel only with a network namespace per worker",
     )
+
+
+def _netns() -> str:
+    return str(Path("/proc/self/ns/net").readlink())
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_configure_node(node: WorkerController) -> None:
+    node.workerinput["knxd_controller_netns"] = _netns()
 
 
 def pytest_report_header(config: pytest.Config) -> str | None:
@@ -52,19 +62,23 @@ def _multicast_isolated() -> bool:
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    parallel = int(os.environ.get("PYTEST_XDIST_WORKER_COUNT", "1")) > 1
+    workerinput = getattr(config, "workerinput", None)
+    own_netns = workerinput is not None and workerinput.get("knxd_controller_netns") != _netns()
+    shared = not own_netns and int(os.environ.get("PYTEST_XDIST_WORKER_COUNT", "1")) > 1
     no_netns = pytest.mark.skip(
         reason="multicast tests need a network namespace: run via run_integration.py with "
         "KNXD_MULTICAST=netns or sudo, or KNXD_MULTICAST=host to use the host network",
     )
-    no_parallel = pytest.mark.skip(reason="multicast tests cannot run in parallel yet; run them without -n")
+    no_parallel = pytest.mark.skip(
+        reason="parallel multicast tests need a network namespace per worker; use run_integration.py or drop -n",
+    )
     for item in items:
         if not item.get_closest_marker("multicast"):
             continue
-        if parallel:
-            item.add_marker(no_parallel)
-        elif not _multicast_isolated():
+        if not _multicast_isolated():
             item.add_marker(no_netns)
+        elif shared:
+            item.add_marker(no_parallel)
 
 
 @pytest.fixture(scope="session")

@@ -13,7 +13,8 @@ unset KNXD_NETNS_ACTIVE
 export KNXD_MULTICAST=$mode
 
 # knxd reads the preferred source address (RTA_PREFSRC) from the multicast route.
-setup='ip link set lo up && ip link set lo multicast on && ip route add 224.0.0.0/4 dev lo src 127.0.0.1'
+# stdout stays clean: xdist workers talk to the controller over it.
+setup='{ ip link set lo up && ip link set lo multicast on && ip route add 224.0.0.0/4 dev lo src 127.0.0.1; } >&2'
 
 need() {
     for tool in "$@"; do
