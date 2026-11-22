@@ -39,7 +39,7 @@ def start_server(procs: Processes, tmp_path: Path, tool: Callable[[str], str]) -
     """Return a function that starts a knxd and waits until all its servers answer."""
 
     async def start(
-        *, heartbeat: int = 120, discover: bool = True, tunnel: bool = True, addresses: int = CLIENT_ADDRESSES
+        *, heartbeat: int = 120, discover: bool = False, tunnel: bool = True, addresses: int = CLIENT_ADDRESSES
     ) -> Server:
         unix_path = str(tmp_path / "tun.sock")
         opt = ["tunnel = tunnel"] if tunnel else []
@@ -85,7 +85,7 @@ def start_server(procs: Processes, tmp_path: Path, tool: Callable[[str], str]) -
         # The unix server is started last, so its socket shows that the others are up too.
         await procs.wait_for_socket(tmp_path / "tun.sock")
         ports = await procs.wait_for_ports("knxd", ["server", "tcp"])
-        return Server(ports["server"], ports["tcp"], unix_path, discover)
+        return Server(ports["server"], ports["tcp"], unix_path)
 
     return start
 

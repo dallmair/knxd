@@ -23,7 +23,6 @@ class Server:
     udp_port: int
     tcp_port: int
     unix_path: str
-    discover: bool
 
     async def open_endpoint(self, transport: str) -> Endpoint:
         if transport == "udp":

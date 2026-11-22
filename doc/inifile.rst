@@ -858,7 +858,8 @@ with the standardized KNX tunneling or routing protocols.
 
 * multicast-address (string: IP address; 1st option of -S/--Server)
 
-  The multicast IP address to use.
+  The multicast IP address to use. knxd only joins this group when routing
+  or discovery is enabled.
 
   Optional; the default is 224.0.23.12.
 
