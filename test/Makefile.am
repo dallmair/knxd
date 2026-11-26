@@ -25,3 +25,6 @@ EXTRA_DIST = \
 	netns-run.sh \
 	coverage.sh \
 	integration
+
+dist-hook:
+	find $(distdir)/integration -name __pycache__ -prune -exec rm -rf {} +

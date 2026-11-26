@@ -23,7 +23,7 @@ EXTRA_DIST = $(java_SRC) arg.def  complete.inc  def.def  errno.inc  io.inc lic.i
 javadir=$(datadir)/java
 java_DATA = eibclient.jar
 
-result.inc : $(top_srcdir)/common/eibloadresult.h
+result.inc : $(top_srcdir)/src/common/eibloadresult.h
 	sed -ne 's/#define \(IMG_[A-Z_0-9]\+\)  \+\([0-9]\+\)/public static final int \1 = \2;/p' $< > $@
 
 EIBConnection.post : result.inc

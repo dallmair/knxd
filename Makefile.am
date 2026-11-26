@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS=1.9
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST=SubmittingPatches .gitignore tools/version.sh
+EXTRA_DIST=SubmittingPatches.md .gitignore tools/version.sh
 
 ## rebuild when the version changes
 
