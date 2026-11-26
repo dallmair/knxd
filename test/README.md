@@ -109,6 +109,14 @@ Alpine ships it with `python3`):
 
 The `xdist` extra (pytest-xdist) is optional; omit it to run tests serially.
 
+To work on the test code, also install the optional `dev` extra (ruff, ty) for
+linting and type checks:
+
+    pip install 'test/[xdist,dev]'
+    ruff check test/
+    ruff format --check test/
+    ty check --python .venv test/
+
 Activate the venv before running `./configure`, because `configure` picks the
 first `python3` on `PATH`. To use a specific interpreter without activating,
 run `PYTHON=$PWD/.venv/bin/python ./configure` instead. `.venv/` is

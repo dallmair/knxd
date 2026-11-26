@@ -4,14 +4,13 @@ version = "0"
 dependencies = [
     "pytest>=8",
     "anyio>=4",
-    # Lint and type checks for test/.
-    "ruff",
-    "ty",
 ]
 
 [project.optional-dependencies]
 # run_integration.py runs the suite in parallel when xdist is installed.
 xdist = ["pytest-xdist"]
+# Lint and type checks for test/.
+dev = ["ruff", "ty"]
 
 [tool.pytest.ini_options]
 anyio_mode = "auto"

@@ -13,7 +13,7 @@
 
 ## Python (`test/` only)
 
-- Use the project venv `.venv/`. Install deps (pytest, ruff, ty) with `.venv/bin/pip install test/` (use `'test/[xdist]'` for parallel runs).
+- Use the project venv `.venv/`. Install deps with `.venv/bin/pip install 'test/[xdist,dev]'` (`dev` adds ruff and ty; `xdist` enables parallel runs).
 - Every Python file you touch under `test/` must pass all checks (ruff config: [test/pyproject.toml](test/pyproject.toml)):
   - `.venv/bin/ruff check <files>`
   - `.venv/bin/ruff format --check <files>`
