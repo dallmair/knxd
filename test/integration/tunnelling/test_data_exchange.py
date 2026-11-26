@@ -15,13 +15,11 @@ from knxnet_wire import (
     L_DATA_REQ,
     TUNNEL_BUSMONITOR,
     format_individual,
-    group_address,
     group_write_cemi,
 )
-from server_config import FIRST_ADDRESS, NewEndpoint, Server
+from server_config import FIRST_ADDRESS, GROUP, NewEndpoint, Server
 from tunnel_session import Session
 
-GROUP = group_address(1, 2, 3)
 QUIET = 0.7
 
 

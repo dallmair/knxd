@@ -69,6 +69,7 @@ difference: UDP has ACKs and sequence counters, TCP and Unix do not.
 | `test_discovery.py` | SEARCH and DESCRIPTION; tests with discovery enabled are marked `multicast` |
 | `test_udp_sequencing.py`, `test_udp_retransmission.py`, `test_udp_refusals.py` | UDP sequence counters, ACKs, retransmission, refusals in ACK status |
 | `test_stream_protocol.py`, `test_stream_framing.py` | TCP/Unix: no ACKs, stream framing, malformed headers |
+| `test_concurrency.py` | many clients on all three servers sending at once: delivery, order, L_Data.con |
 
 The suite waits for real protocol timeouts (1 s retransmission, 2 s heartbeat).
 

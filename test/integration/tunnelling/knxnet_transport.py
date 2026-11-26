@@ -56,7 +56,9 @@ class Endpoint:
     async def expect_silence(self, duration: float = QUIET_WAIT) -> None:
         with anyio.move_on_after(duration):
             extra = await self.recv()
-            assert extra is None, f"unexpected frame: service {extra.service:#06x} body {extra.body.hex()}"
+            if extra is None:
+                raise AssertionError("connection closed by the peer")
+            raise AssertionError(f"unexpected frame: service {extra.service:#06x} body {extra.body.hex()}")
 
     async def drain(self, duration: float = QUIET_WAIT) -> list[Frame]:
         """Collect frames until none arrives for `duration` seconds."""

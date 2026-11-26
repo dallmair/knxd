@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import anyio
 import pytest
 
-from knxnet_transport import StreamEndpoint
 from knxnet_wire import (
     CONNECT_RESPONSE,
     CONNECTIONSTATE_REQUEST,
     CONNECTIONSTATE_RESPONSE,
+    DISCONNECT_REQUEST,
     E_NO_ERROR,
     TUNNEL_LINKLAYER,
     Frame,
@@ -19,16 +17,8 @@ from knxnet_wire import (
     connect_request,
     tunnel_cri,
 )
+from server_config import NewEndpoint, Server, StartServer, stream
 from tunnel_session import Session
-
-if TYPE_CHECKING:
-    from server_config import NewEndpoint, Server, StartServer
-
-
-async def stream(server: Server, new_endpoint: NewEndpoint, kind: str) -> StreamEndpoint:
-    endpoint = await new_endpoint(server, kind)
-    assert isinstance(endpoint, StreamEndpoint)
-    return endpoint
 
 
 async def test_frame_split_into_single_bytes_is_reassembled(
@@ -79,7 +69,7 @@ async def test_unparseable_known_service_is_ignored(
     endpoint = await stream(knxd_server, new_endpoint, stream_transport)
     session = await Session.connect(endpoint)
     await endpoint.send(Frame(CONNECTIONSTATE_REQUEST, b"\x01"))
-    await endpoint.send(Frame(0x0209, b"\x01\x00"))  # DISCONNECT_REQUEST without HPAI
+    await endpoint.send(Frame(DISCONNECT_REQUEST, b"\x01\x00"))  # no HPAI
     await endpoint.expect_silence()
     assert await session.connection_state() == E_NO_ERROR
 

@@ -7,42 +7,20 @@ requests in `test_udp_refusals.py`. TCP and Unix connections have no ACKs; see
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
 
-from knxnet_transport import UdpEndpoint
 from knxnet_wire import (
     E_NO_ERROR,
     L_DATA_CON,
     L_DATA_IND,
-    L_DATA_REQ,
-    TUNNEL_LINKLAYER,
     TUNNELLING_ACK,
     TUNNELLING_REQUEST,
     config_request,
-    group_address,
-    group_write_cemi,
     parse_sequenced,
     tunnel_ack,
     tunnel_request,
 )
-from tunnel_session import Session
-
-if TYPE_CHECKING:
-    from server_config import NewEndpoint, Server
-
-GROUP = group_address(1, 2, 3)
-REQUEST = group_write_cemi(L_DATA_REQ, GROUP)
-PROP_READ = bytes([0xFC, 0, 0, 0, 0, 0x10, 0])
-
-
-async def udp_session(
-    server: Server, new_endpoint: NewEndpoint, layer: int | None = TUNNEL_LINKLAYER
-) -> tuple[Session, UdpEndpoint]:
-    endpoint = await new_endpoint(server, "udp")
-    assert isinstance(endpoint, UdpEndpoint)
-    return await Session.connect(endpoint, layer), endpoint
+from server_config import PROP_READ, REQUEST, NewEndpoint, Server, udp_session
 
 
 async def test_request_with_expected_sequence_is_acked(knxd_server: Server, new_endpoint: NewEndpoint) -> None:
@@ -107,7 +85,7 @@ async def test_sequence_counter_wraps_around(knxd_server: Server, new_endpoint: 
     session, _ = await udp_session(knxd_server, new_endpoint)
     for seq in range(258):
         await session.send_cemi(REQUEST, seq=seq & 0xFF)
-        await session.cemi_stream(0.0)  # keep the server's own requests acknowledged
+        session.pending.clear()  # send_cemi already ACKed these L_Data.con
     assert await session.connection_state() == E_NO_ERROR
 
 

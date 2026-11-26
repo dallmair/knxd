@@ -6,41 +6,25 @@ counter is not checked. Several channels share one connection.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
 
-from knxnet_transport import StreamEndpoint
 from knxnet_wire import (
     DEVICE_CONFIGURATION_ACK,
     E_CONNECTION_ID,
     E_NO_ERROR,
     L_DATA_CON,
     L_DATA_IND,
-    L_DATA_REQ,
     TUNNELLING_ACK,
     TUNNELLING_REQUEST,
     Frame,
     config_request,
-    group_address,
     group_write_cemi,
     parse_sequenced,
     tunnel_ack,
     tunnel_request,
 )
+from server_config import PROP_READ, REQUEST, NewEndpoint, Server, stream
 from tunnel_session import Session
-
-if TYPE_CHECKING:
-    from server_config import NewEndpoint, Server
-
-REQUEST = group_write_cemi(L_DATA_REQ, group_address(1, 2, 3))
-PROP_READ = bytes([0xFC, 0, 0, 0, 0, 0x10, 0])
-
-
-async def stream(server: Server, new_endpoint: NewEndpoint, kind: str) -> StreamEndpoint:
-    endpoint = await new_endpoint(server, kind)
-    assert isinstance(endpoint, StreamEndpoint)
-    return endpoint
 
 
 async def test_requests_are_not_acknowledged(

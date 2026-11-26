@@ -13,20 +13,17 @@ from knxnet_wire import (
     DISCONNECT_REQUEST,
     E_CONNECTION_ID,
     E_TUNNELLING_LAYER,
-    L_DATA_REQ,
     TUNNEL_LINKLAYER,
     TUNNELLING_REQUEST,
-    group_address,
-    group_write_cemi,
     parse_sequenced,
     tunnel_ack,
 )
+from server_config import REQUEST
 from tunnel_session import Session
 
 if TYPE_CHECKING:
     from server_config import NewEndpoint, Server
 
-REQUEST = group_write_cemi(L_DATA_REQ, group_address(1, 2, 3))
 RETRY_AFTER = 1.0  # TUNNELING_REQUEST_TIMEOUT
 
 

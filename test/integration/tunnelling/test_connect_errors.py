@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from knxnet_wire import (
+    CONNECT_REQUEST,
+    E_CONNECTION_TYPE,
     E_NO_ERROR,
     E_NO_MORE_CONNECTIONS,
     E_TUNNELLING_LAYER,
@@ -18,7 +20,7 @@ from knxnet_wire import (
     parse_connect_response,
     tunnel_cri,
 )
-from server_config import E_CONNECTION_TYPE, FIRST_ADDRESS, NewEndpoint, Server, StartServer
+from server_config import FIRST_ADDRESS, NewEndpoint, Server, StartServer
 from tunnel_session import Session, connect
 
 
@@ -88,9 +90,9 @@ async def test_connect_requests_with_broken_bodies_are_ignored(
 ) -> None:
     endpoint = await new_endpoint(knxd_server, transport)
     both = hpai(endpoint.protocol) * 2
-    await endpoint.send(Frame(0x0205, b"\x08\x01"))  # truncated
-    await endpoint.send(Frame(0x0205, both))  # no CRI at all
-    await endpoint.send(Frame(0x0205, both + bytes([9, 4, 2, 0])))  # CRI length byte does not match
+    await endpoint.send(Frame(CONNECT_REQUEST, b"\x08\x01"))  # truncated
+    await endpoint.send(Frame(CONNECT_REQUEST, both))  # no CRI at all
+    await endpoint.send(Frame(CONNECT_REQUEST, both + bytes([9, 4, 2, 0])))  # CRI length byte does not match
     await endpoint.expect_silence()
     # The server is still usable afterwards, and nothing was allocated.
     assert (await Session.connect(endpoint)).address == FIRST_ADDRESS

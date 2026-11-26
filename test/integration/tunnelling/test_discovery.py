@@ -6,12 +6,15 @@ servers do not answer it.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from knxnet_transport import StreamEndpoint, UdpEndpoint
 from knxnet_wire import (
     DESCRIPTION_REQUEST,
     DESCRIPTION_RESPONSE,
+    E_CONNECTION_TYPE,
     SEARCH_REQUEST,
     SEARCH_RESPONSE,
     TUNNEL_LINKLAYER,
@@ -20,7 +23,9 @@ from knxnet_wire import (
     parse_connect_response,
     tunnel_cri,
 )
-from server_config import E_CONNECTION_TYPE, NewEndpoint, Server, StartServer
+
+if TYPE_CHECKING:
+    from server_config import NewEndpoint, Server, StartServer
 
 FAMILY_CORE = 2
 FAMILY_DEVICE_MANAGEMENT = 3

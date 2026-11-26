@@ -5,7 +5,9 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from knxnet_transport import Endpoint, TcpEndpoint, UdpEndpoint, UnixEndpoint
+from knxnet_transport import Endpoint, StreamEndpoint, TcpEndpoint, UdpEndpoint, UnixEndpoint
+from knxnet_wire import L_DATA_REQ, M_PROPREAD_REQ, TUNNEL_LINKLAYER, group_address, group_write_cemi
+from tunnel_session import Session
 
 TRANSPORTS = ["udp", "tcp", "unix"]
 STREAM_TRANSPORTS = ["tcp", "unix"]
@@ -14,8 +16,9 @@ STREAM_TRANSPORTS = ["tcp", "unix"]
 FIRST_ADDRESS = 0x11C8
 CLIENT_ADDRESSES = 4
 
-# Status codes that are not (yet) in knxnet_wire because only some tests need them.
-E_CONNECTION_TYPE = 0x22
+GROUP = group_address(1, 2, 3)
+REQUEST = group_write_cemi(L_DATA_REQ, GROUP)
+PROP_READ = bytes([M_PROPREAD_REQ, 0, 0, 0, 0, 0x10, 0])
 
 
 @dataclass
@@ -34,3 +37,17 @@ class Server:
 
 StartServer = Callable[..., Awaitable[Server]]
 NewEndpoint = Callable[[Server, str], Awaitable[Endpoint]]
+
+
+async def udp_session(
+    server: Server, new_endpoint: NewEndpoint, layer: int | None = TUNNEL_LINKLAYER
+) -> tuple[Session, UdpEndpoint]:
+    endpoint = await new_endpoint(server, "udp")
+    assert isinstance(endpoint, UdpEndpoint)
+    return await Session.connect(endpoint, layer), endpoint
+
+
+async def stream(server: Server, new_endpoint: NewEndpoint, kind: str) -> StreamEndpoint:
+    endpoint = await new_endpoint(server, kind)
+    assert isinstance(endpoint, StreamEndpoint)
+    return endpoint
