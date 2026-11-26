@@ -147,8 +147,8 @@ they are skipped in plain `-n` runs. `make test` runs them in a separate pass
 after the other tests, so the output of the two passes does not interleave.
 In that pass every xdist worker has its own network namespace, so the multicast
 tests run in parallel with each other and cannot send telegrams onto a real
-KNX/IP network. With `KNXD_MULTICAST=host`, or without pytest-xdist, they run
-one at a time.
+KNX/IP network. In `host` mode, or without pytest-xdist, they run one at a
+time.
 
 ### Multicast tests
 
@@ -157,20 +157,40 @@ one at a time.
 
     make test KNXD_MULTICAST=sudo
 
+Each mode is a script in `test/netns/`. `KNXD_MULTICAST` is a comma-separated
+list of modes. At the start of the run, `run_integration.py` calls each listed
+script with `--test`, in order, and uses the first that succeeds. If none does,
+the run fails. `auto` stands for every script with a number prefix, lowest
+number first. `!mode` removes a mode from the list. Examples:
+
 | Value | Behaviour |
 |-------|-----------|
-| `auto` (default) | Uses an unprivileged namespace (`unshare --user --map-root-user --net`). If that is not possible, the multicast tests are skipped and the reason says so. |
-| `netns` | As `auto`, but fails instead of skipping. For CI that must support namespaces. |
-| `sudo` | Creates the namespace with `sudo unshare --net`, sets up `lo`, then drops back to your user for pytest. Only the setup runs as root, and the namespace vanishes with the process. Run `sudo -v` first if the prompt is hidden by `make`. |
-| `host` | No isolation, and never chosen automatically. For machines with no KNX/IP router on the network, for example CI. |
+| `auto` (default) | Tries `netns`, then `sudo`, then `host`, then `true`. |
+| `auto,!sudo` | As `auto`, but never runs sudo. For CI where sudo aborts the run. |
+| `auto,!host` | As `auto`, but multicast never goes onto the host network. |
+| `netns` | Fails unless unprivileged namespaces work. For CI that must support them. |
+
+| Mode | Script | Behaviour |
+|------|--------|-----------|
+| `netns` | `10-netns.sh` | Unprivileged namespace (`unshare --user --map-root-user --net`). |
+| `sudo` | `50-sudo.sh` | Creates the namespace with `sudo unshare --net`, sets up `lo`, then drops back to your user for pytest. Only the setup runs as root, and the namespace vanishes with the process. sudo runs with `-n`, so it never prompts: it works as root, with a `NOPASSWD` rule, or after `sudo -v` has cached your credentials. |
+| `host` | `90-host.sh` | No isolation: telegrams may reach a KNX/IP router on the LAN. `--test` checks that the multicast route uses an interface with the `MULTICAST` flag. |
+| `true` | `99-true.sh` | Last resort: the multicast tests do not run. |
+
+A new mode (for example Docker, or a jail on *BSD) is a new script: with
+`--test` it exits 0 if it can work here, and prints `parallel` if every call
+gets an isolated network of its own (so each xdist worker can use one), or
+`serial` otherwise. Without `--test` it runs its arguments as a command in an
+isolated network with multicast routed over `lo`, and sets
+`KNXD_NETNS_ACTIVE=1`. Nothing may write to stdout before the command starts.
 
 Unprivileged namespaces are blocked by AppArmor on Ubuntu 24.04+
 (`kernel.apparmor_restrict_unprivileged_userns`), by `kernel.unprivileged_userns_clone=0`
 on older Debian, by `user.max_user_namespaces=0` on RHEL, and by Docker's default
 seccomp profile. Use `sudo` or `host` there. `sudo` needs `unshare`, `setpriv` and `ip`.
 
-`test/netns-run.sh MODE COMMAND...` implements these modes and can be used by hand,
-for example `test/netns-run.sh sudo python3 -m pytest -m multicast -k group`.
+The scripts can be used by hand, for example
+`test/netns/50-sudo.sh python3 -m pytest -m multicast -k group`.
 
 Running `pytest -m multicast` directly skips these tests. Only the launcher or
 `KNXD_MULTICAST=host` enables them.
