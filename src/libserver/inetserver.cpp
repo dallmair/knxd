@@ -47,6 +47,7 @@ void
 InetServer::start()
 {
   struct sockaddr_in addr;
+  socklen_t len = sizeof (addr);
   int reuse = port != 0;
 
   if (ignore_when_systemd && static_cast<Router &>(router).using_systemd)
@@ -57,7 +58,7 @@ InetServer::start()
     }
 
   TRACEPRINTF (t, 8, "OpenInetSocket %d", port);
-  memset (&addr, 0, sizeof (addr));
+  memset (&addr, 0, len);
   addr.sin_family = AF_INET;
   addr.sin_port = htons (port);
   addr.sin_addr.s_addr = htonl (INADDR_ANY);
@@ -71,7 +72,7 @@ InetServer::start()
 
   setsockopt (fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof (reuse));
 
-  if (bind (fd, (struct sockaddr *) &addr, sizeof (addr)) == -1)
+  if (bind (fd, (struct sockaddr *) &addr, len) == -1)
     {
       ERRORPRINTF (t, E_ERROR | 13, "OpenInetSocket %d: bind: %s", port, strerror(errno));
       goto ex2;
@@ -83,12 +84,12 @@ InetServer::start()
       goto ex2;
     }
 
-  {
-    struct sockaddr_in bound;
-    socklen_t len = sizeof (bound);
-    if (getsockname (fd, (struct sockaddr *) &bound, &len) == 0)
-      ERRORPRINTF (t, E_INFO | 158, "Server '%s' is listening for knxd clients on TCP port %d", cfg->name, ntohs (bound.sin_port));
-  }
+  if (getsockname (fd, (struct sockaddr *) &addr, &len) == -1)
+    {
+      ERRORPRINTF (t, E_ERROR | 159, "OpenInetSocket %d: getsockname: %s", port, strerror(errno));
+      goto ex2;
+    }
+  ERRORPRINTF (t, E_INFO | 160, "Server '%s' is listening for knxd clients on TCP port %d", cfg->name, ntohs (addr.sin_port));
 
   TRACEPRINTF (t, 8, "InetSocket opened");
   NetServer::start();
