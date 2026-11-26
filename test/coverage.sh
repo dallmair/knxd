@@ -26,11 +26,18 @@ if ! "$python" -m gcovr --version >/dev/null 2>&1; then
 fi
 
 mkdir -p "$dir"
+dir=$(cd "$dir" && pwd)
+[ "$dir" != "$src" ] || { echo "error: COVERAGE_DIR must not be the source tree" >&2; exit 1; }
 if [ ! -f "$dir/config.status" ] || [ -n "${COVERAGE_REBUILD:-}" ]; then
+    if [ -n "$(ls -A "$dir")" ] && [ ! -f "$dir/.knxd-coverage" ]; then
+        echo "error: $dir is not empty and was not created by coverage.sh; refusing to delete it" >&2
+        exit 1
+    fi
     # First run: copy everything that is needed to configure (generated files such as
     # configure included), but no build outputs, virtualenv or git data.
     rm -rf "$dir"
     mkdir -p "$dir"
+    touch "$dir/.knxd-coverage"
     (cd "$src" && tar --exclude=./.venv --exclude=./.git --exclude='*.o' --exclude='*.lo' \
         --exclude='*.la' --exclude='*.a' --exclude=.libs --exclude=.deps --exclude=autom4te.cache \
         --exclude=__pycache__ --exclude='*.gcda' --exclude='*.gcno' \
