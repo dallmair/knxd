@@ -341,6 +341,17 @@ readaddrblock (const char *addr)
   (*ini["main"])["client-addrs"] = addr;
 }
 
+static unsigned long
+readport (const char *port)
+{
+  char *end;
+  errno = 0;
+  unsigned long p = strtoul (port, &end, 10);
+  if (!isdigit ((unsigned char) *port) || *end || errno || p > 65535)
+    die ("Port: '%s' is not a valid port number", port);
+  return p;
+}
+
 /** version */
 static struct argp_option options[] =
 {
@@ -521,8 +532,8 @@ parse_opt (int key, char *arg, struct argp_state *state)
       if (b)
         {
           *b++ = 0;
-          if (atoi (b) > 0 || !strcmp (b, "0"))
-            (*ini["server"])["port"] = b;
+          if (*b)
+            (*ini["server"])["port"] = std::to_string (readport (b));
         }
       if (*a)
         (*ini["server"])["multicast-address"] = a;
@@ -580,7 +591,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
       (*ini[link_target])["server"] = "knxd_tcp";
       // (*ini[link_target])["driver"] = "knx-link";
       const char *port = OPT_ARG(arg,state,"");
-      if (*port && atoi(port) > 0)
+      if (*port && readport (port) > 0)
         {
           (*ini[link_target])["port"] = port;
           (*ini[link_target])["systemd-ignore"] = "false";
