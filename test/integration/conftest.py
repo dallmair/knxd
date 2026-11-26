@@ -15,7 +15,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
 
 import anyio
 import pytest
@@ -121,12 +121,6 @@ def _bound_ports(path: Path) -> dict[str, int]:
     return {m[1].decode(): int(m[2]) for m in LISTEN_LINE.finditer(path.read_bytes())}
 
 
-def _count_lines(path: Path) -> int:
-    if not path.exists():
-        return 0
-    return path.read_bytes().count(b"\n")
-
-
 def _listening(path: Path) -> bool:
     # A probe connection would take a client address from knxd, so ask the kernel instead.
     try:
@@ -156,10 +150,6 @@ def _tail(path: Path, lines: int = 20) -> str:
     return "\n".join(text[-lines:]) or "(empty)"
 
 
-def _open_output(out_path: Path, err_path: Path, append: bool = False) -> tuple[IO[bytes], IO[bytes]]:
-    return out_path.open("ab" if append else "wb"), err_path.open("wb")
-
-
 async def _stop(proc: Process) -> None:
     if proc.returncode is not None:
         return
@@ -183,11 +173,10 @@ class Processes:
     def _paths(self, name: str) -> tuple[Path, Path]:
         return self.workdir / f"{name}.out", self.workdir / f"{name}.err"
 
-    async def spawn(self, name: str, argv: Sequence[str], *, stdout: Path | None = None) -> None:
+    async def spawn(self, name: str, argv: Sequence[str]) -> None:
         out_path, err_path = self._paths(name)
         self._names.append(name)
-        out, err = _open_output(stdout or out_path, err_path)
-        with out, err:
+        with out_path.open("wb") as out, err_path.open("wb") as err:
             self._running[name] = await anyio.open_process(
                 list(argv),
                 stdin=subprocess.DEVNULL,
@@ -197,45 +186,12 @@ class Processes:
                 env=self.env,
             )
 
-    async def run(
-        self,
-        name: str,
-        argv: Sequence[str],
-        *,
-        stdout: Path | None = None,
-        append: bool = False,
-    ) -> int:
-        """Run a command to completion and return its exit status."""
-        out_path, err_path = self._paths(name)
-        self._names.append(name)
-        out, err = _open_output(stdout or out_path, err_path, append)
-        with out, err, anyio.move_on_after(DEFAULT_TIMEOUT):
-            result = await anyio.run_process(
-                list(argv),
-                stdin=subprocess.DEVNULL,
-                stdout=out,
-                stderr=err,
-                cwd=self.workdir,
-                env=self.env,
-                check=False,
-            )
-            return result.returncode
-        pytest.fail(f"{name} did not finish within {DEFAULT_TIMEOUT}s")
-
     def stderr_tail(self, name: str) -> str:
         return _tail(self._paths(name)[1])
-
-    async def stop(self, name: str) -> None:
-        proc = self._running.pop(name, None)
-        if proc is not None:
-            await _stop(proc)
 
     async def stop_all(self) -> None:
         while self._running:
             await _stop(self._running.popitem()[1])
-
-    async def wait_for_lines(self, path: Path, count: int) -> None:
-        await _wait_until(lambda: _count_lines(path) >= count, f"{path.name} to have {count} line(s)")
 
     async def wait_for_socket(self, path: Path) -> None:
         await _wait_until(lambda: _listening(path), f"{path.name} to listen")

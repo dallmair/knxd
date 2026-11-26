@@ -1,8 +1,7 @@
 # knxd tests
 
-This suite contains **integration tests only**. Each scenario starts real
-`knxd` daemons and `knxtool` clients and checks their observable behaviour
-(exit status, command output, golden files).
+This suite contains **integration tests only**. Each scenario starts a real
+`knxd` and checks its observable behaviour from outside, over its sockets.
 
 Tests marked `@pytest.mark.deviation` pin behaviour that differs from the KNX
 specification or is a known bug (for example the address leak after a refused
@@ -189,7 +188,5 @@ not part of `make test` or CI. That target is planned but not yet present.
 - Use the fixtures in `integration/conftest.py` for process start/stop,
   readiness, ports, and output. Do not add fixed sleeps without a comment that
   says why no observable signal exists.
-- Store expected output in the test's `golden/` directory, next to its file.
-  Do not inline it in tests.
 - A test must skip (`pytest.skip`) when a required feature is disabled. It must
   not pass silently.
