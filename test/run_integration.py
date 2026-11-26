@@ -21,7 +21,8 @@ NETNS_DIR = HERE / "netns"
 
 
 def _pytest_cmd(*args: str) -> list[str]:
-    return [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", str(HERE / "integration"), *args]
+    # Extra arguments (used by coverage.sh) go to every pytest run.
+    return [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", str(HERE / "integration"), *args, *sys.argv[1:]]
 
 
 def _result(status: int) -> int:

@@ -28,7 +28,8 @@ fi
 mkdir -p "$dir"
 dir=$(cd "$dir" && pwd)
 [ "$dir" != "$src" ] || { echo "error: COVERAGE_DIR must not be the source tree" >&2; exit 1; }
-if [ ! -f "$dir/config.status" ] || [ -n "${COVERAGE_REBUILD:-}" ]; then
+# A config.status without --coverage was copied from $src by a run whose configure failed.
+if ! grep -q -- --coverage "$dir/config.status" 2>/dev/null || [ -n "${COVERAGE_REBUILD:-}" ]; then
     if [ -n "$(ls -A "$dir")" ] && [ ! -f "$dir/.knxd-coverage" ]; then
         echo "error: $dir is not empty and was not created by coverage.sh; refusing to delete it" >&2
         exit 1
@@ -44,7 +45,8 @@ if [ ! -f "$dir/config.status" ] || [ -n "${COVERAGE_REBUILD:-}" ]; then
         --exclude=./src/server/knxd --exclude=./src/server/knxd_args --exclude=./src/tools/knxtool \
         -cf - .) | (cd "$dir" && tar -xf -)
     (cd "$dir" && ./configure CFLAGS='-O0 -g --coverage' \
-        CXXFLAGS='-O0 -g --coverage -std=c++0x -Wno-subobject-linkage' LDFLAGS=--coverage >configure.log 2>&1)
+        CXXFLAGS='-O0 -g --coverage -std=c++0x -Wno-subobject-linkage' LDFLAGS=--coverage >configure.log 2>&1) ||
+        { echo "error: configure failed, see $dir/configure.log" >&2; exit 1; }
 else
     # Later runs: bring over the current sources only, so build outputs in $dir stay
     # (and are not replaced by the uninstrumented ones from $src).
@@ -58,9 +60,8 @@ cd "$dir"
 # Counters from earlier runs would be added to this one.
 find . -name '*.gcda' -delete
 
-# --rootdir keeps test/integration/conftest.py (shared fixtures) in scope wherever this is run from.
-KNXD_BUILD_ROOT="$dir" "$python" -m pytest -p no:cacheprovider --rootdir="$src/test" \
-    "$src/test/integration" "$@"
+# The same runner as make test, so KNXD_MULTICAST picks the multicast mode here too.
+KNXD_BUILD_ROOT="$dir" "$python" "$src/test/run_integration.py" "$@"
 
 "$python" -m gcovr -r . --filter "$files" --txt
 if [ -n "${COVERAGE_HTML:-}" ]; then

@@ -80,7 +80,8 @@ The suite waits for real protocol timeouts (1 s retransmission, 2 s heartbeat).
 
 `coverage.sh` builds an instrumented copy of the tree in `/tmp/knxd-coverage`
 (the normal build is left alone, set `COVERAGE_DIR` to change the place),
-runs the whole integration suite against it and prints a per-file line report
+runs the whole integration suite against it through `run_integration.py`, like
+`make test` (so `KNXD_MULTICAST` applies), and prints a per-file line report
 for `src/`. Extra arguments go to pytest, for example
 `test/coverage.sh -k tunnelling` to run only some tests. Set `COVERAGE_FILES`
 to a regex to restrict the report to some files.
