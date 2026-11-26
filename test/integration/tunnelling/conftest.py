@@ -61,7 +61,8 @@ def start_server(procs: Processes, tmp_path: Path, tool: Callable[[str], str]) -
             "server = ets_router",
             f"discover = {'true' if discover else 'false'}",
             "port = 0",
-            "multicast-address = 224.99.98.95",
+            # Administratively scoped (RFC 2365); test/netns/90-host.sh checks the route for it.
+            "multicast-address = 239.255.98.95",
             f"heartbeat-timeout = {heartbeat}",
             *opt,
             "",

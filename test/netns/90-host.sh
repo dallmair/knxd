@@ -4,10 +4,12 @@
 set -eu
 
 if [ "${1-}" = --test ]; then
+    # The group the tests use (test/integration/tunnelling/conftest.py).
+    group=239.255.98.95
     # A default route also covers multicast, so ask the kernel instead of looking for 224.0.0.0/4.
-    dev=$(ip -4 route get 224.0.23.12 2>/dev/null | sed -n 's/.* dev \([^ ]*\).*/\1/p')
+    dev=$(ip -4 route get "$group" 2>/dev/null | sed -n 's/.* dev \([^ ]*\).*/\1/p')
     if [ -z "$dev" ]; then
-        echo "host: no IPv4 route for multicast (224.0.23.12)" >&2
+        echo "host: no IPv4 route for multicast ($group)" >&2
         exit 2
     fi
     ip link show "$dev" | grep -q '<[^>]*MULTICAST' && { echo serial; exit 0; }
